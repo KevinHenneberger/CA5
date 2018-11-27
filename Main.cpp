@@ -8,6 +8,23 @@ using namespace std;
 
 int main() {
 
+    // string custDepartureCity;
+    // string custDestinationCity;
+    // string custDepartureTime;
+    // string custReturnDepartureTime;
+    // string custObjective;
+
+    // cout << "Departure City: ";
+    // cin >> custDepartureCity;  
+    // cout << "Destination City: ";
+    // cin >> custDestinationCity;  
+    // cout << "Departure Time: ";
+    // cin >> custDepartureTime; 
+    // cout << "Return Departure Time: ";
+    // cin >> custReturnDepartureTime;  
+    // cout << "Customer Objective: ";
+    // cin >> custObjective;  
+
     Map map;
 
     ifstream ddfsfile("DailyDirectFlightSchedule.txt");
@@ -41,11 +58,15 @@ int main() {
                 i++;
             }
 
-            map.insertEdge(map.find(departureCity), map.find(destinationCity), destinationCity, departureTime, arrivalTime, cost);
+            map.insertEdge(map.find(departureCity), map.find(destinationCity), departureCity, destinationCity, departureTime, arrivalTime, cost);
         }
 
         ddfsfile.close();
     }
 
+    // map.breadthFirstSearch(0);
+    // map.depthFirstSearch();
+
+    map.dijkstrasAlgorithm();
     map.printGraph();
 }

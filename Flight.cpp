@@ -3,8 +3,10 @@ using namespace std;
 
 #include "Flight.h"
 
-Flight::Flight(int id, string destCity, string dTime, string aTime, float c) {
-    destinationCityID = id;
+Flight::Flight(int departID, int destID, string departCity, string destCity, string dTime, string aTime, float c) {
+    departureCityID = departID;
+    destinationCityID = destID;
+    departureCity = departCity;
     destinationCity = destCity;
     departureTime = dTime;
     arrivalTime = aTime; 
@@ -12,9 +14,10 @@ Flight::Flight(int id, string destCity, string dTime, string aTime, float c) {
 }
 
 float Flight::convertTime(string t) {
-    string hh = t.substr(0, 2);
-    string mm = t.substr(3, 2);
-    string mer = t.substr(5);
+    int colon = t.find(":");
+    string hh = t.substr(0, colon);
+    string mm = t.substr(colon+1, 2);
+    string mer = t.substr(colon+3);
     float hours;
     float minutes;
 
@@ -30,6 +33,6 @@ float Flight::convertTime(string t) {
 }
 
 ostream& operator<<(ostream &out, Flight other) {
-    out << other.destinationCity << " " << other.departureTime << " " << other.arrivalTime << " $" << other.cost;
+    out << other.departureCity << " " <<other.destinationCity << " " << other.departureTime << " " << other.arrivalTime << " $" << other.cost;
     return out;
 }
