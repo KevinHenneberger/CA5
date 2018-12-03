@@ -12,11 +12,14 @@ class City {
 
         int state;
         int dist;
-        int pred;
+        Flight *pred;
 
         int discT;
         int finT;
 
         City(int i, string n);
+
+        float convertTime(string t) const;
         friend ostream& operator<<(ostream &out, City other);
+        friend bool operator>(const City &c1, const City &c2);
 };

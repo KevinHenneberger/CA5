@@ -3,8 +3,15 @@ using namespace std;
 
 #include "Map.h"
 
-Map::Map() {
+Map::Map(string dptCity, string dstCity, string eDTme, string eRetDTme, string cstObj) {
     t = 0;
+    totalCost = 0;
+
+    departCity = dptCity;
+    destCity = dstCity;
+    earliestDepartTime = eDTme;
+    earliestReturnDepartTime = eRetDTme;
+    custObj = cstObj;
 }
 
 void Map::insertCity(int cityID, string cityName) {
@@ -49,46 +56,38 @@ int Map::find(string cityName) {
     return -1;
 }
 
-void Map::breadthFirstSearch(int srcCityID) {
-    for (int c = 0; c < cities.size(); c++) {
-        cities[c].state = 0;
-        cities[c].dist = 999999; 
-        cities[c].pred = -1;
-    }
+float Map::convertTime(string t) {
+    int colon = t.find(":");
+    string hh = t.substr(0, colon);
+    string mm = t.substr(colon+1, 2);
+    string mer = t.substr(colon+3);
+    float hours;
+    float minutes;
 
-    cities[srcCityID].state = 1;
-    cities[srcCityID].dist = 0;
-    cities[srcCityID].pred = -1;
+    stringstream hss(hh);
+    hss >> hours;
+    stringstream mss(mm);
+    mss >> minutes;
 
-    queue<int> q;
-    q.push(srcCityID);
+    if (mer == "pm" && hours != 12) hours += 12;
+    else if (mer == "am" && hours == 12) hours = 0;
 
-    while (!q.empty()) {
-
-        int d = q.front();
-        q.pop();
-
-        for (list<Flight>::iterator f = cities[d].adjList.begin(); f != cities[d].adjList.end(); f++) {
-            if (cities[f->destinationCityID].state == 0) {
-                cities[f->destinationCityID].state = 1;
-                cities[f->destinationCityID].dist = cities[d].dist + 1;
-                cities[f->destinationCityID].pred = d;
-                q.push(f->destinationCityID);
-            }
-        }
-        cities[d].state = 2; 
-    }
+    return hours + (minutes / 100);
 }
 
-void Map::depthFirstSearch() {
+bool Map::isConflict(const string &t1, const string &t2) {
+    return convertTime(t1) > convertTime(t2);
+}
+
+void Map::depthFirstSearch(int cityID) {
     for (int c = 0; c < cities.size(); c++) {
         cities[c].state = 0;
-        cities[c].pred = -1;
+        cities[c].pred = nullptr;
     }
 
     t = 0;
 
-    for (int c = 0; c < cities.size(); c++) {
+    for (int c = cityID; c < cities.size(); c++) {
         if (cities[c].state == 0) {
             dfsVisit(c);
         }
@@ -102,7 +101,7 @@ void Map::dfsVisit(int cityID) {
 
     for (list<Flight>::iterator f = cities[cityID].adjList.begin(); f != cities[cityID].adjList.end(); f++) {
         if (cities[f->destinationCityID].state == 0) {
-            cities[f->destinationCityID].pred = cityID;
+            cities[f->destinationCityID].pred = &(*f);
             dfsVisit(f->destinationCityID);
         }
     }
@@ -112,57 +111,163 @@ void Map::dfsVisit(int cityID) {
     cities[cityID].finT = t;
 }
 
-void Map::initSingleSource(int srcCityID) {
+void Map::dijkstrasAlgorithm(int srcCityID, string earlstDepTme) {
+
+    // init single source
     for (int c = 0; c < cities.size(); c++) {
         cities[c].dist = 999999;
-        cities[c].pred = -1;
+        cities[c].pred = nullptr;
     }
+
+    priority_queue<City, vector<City>, greater<City> > pq;
+
     cities[srcCityID].dist = 0;
-}
+    pq.push(cities[srcCityID]);
 
-void Map::relax(Flight &flight) {
-    if (cities[flight.destinationCityID].dist > cities[flight.departureCityID].dist + flight.cost) {
-        cities[flight.destinationCityID].dist = cities[flight.departureCityID].dist + flight.cost;
-        cities[flight.destinationCityID].pred = flight.departureCityID;
-    }
-}
+    while (!pq.empty()) {
+        //extract min
+        City u = pq.top(); 
+        pq.pop();
 
-void Map::dijkstrasAlgorithm() {
-
-    initSingleSource(0);
-    vector<int> s;
-    priority_queue<int> q;
-
-    for (int i = 0; i < cities.size(); i++) {
-        q.push(i);
-    }
-
-    while (!q.empty()) {
-        int u = q.top(); 
-        q.pop(); 
-
-        s.push_back(u);
-
-        for (list<Flight>::iterator f = cities[u].adjList.begin(); f != cities[u].adjList.end(); f++) {
-            if (cities[f->destinationCityID].dist > cities[f->departureCityID].dist + f->cost) {
-                cities[f->destinationCityID].dist = cities[f->departureCityID].dist + f->cost;
-                cities[f->destinationCityID].pred = f->departureCityID;
+        // loop through all adjacent edges
+        for (list<Flight>::iterator f = cities[u.id].adjList.begin(); f != cities[u.id].adjList.end(); f++) {
+            if (cities[u.id].pred != nullptr) {
+                if (!isConflict(cities[u.id].pred->arrivalTime, f->departureTime)) {
+                    if (!isConflict(earlstDepTme, f->departureTime)) {
+                        // relax
+                        if (cities[f->destinationCityID].dist > convertTime(f->arrivalTime)) {
+                            cities[f->destinationCityID].dist = convertTime(f->arrivalTime);
+                            cities[f->destinationCityID].pred = &(*f);
+                            pq.push(cities[f->destinationCityID]);
+                        }
+                    }
+                }
+            } else {
+                if (!isConflict(earlstDepTme, f->departureTime)) {
+                    // relax
+                    if (cities[f->destinationCityID].dist > convertTime(f->arrivalTime)) {
+                        cities[f->destinationCityID].dist = convertTime(f->arrivalTime);
+                        cities[f->destinationCityID].pred = &(*f);
+                        pq.push(cities[f->destinationCityID]);
+                    }
+                }
             }
         }
     }
+}   
 
-    cout << cities[cities[find("Denver")].pred].name << " to Denver" << endl;
-}
-
-void findItinerary(string departCity, string destCity, string dTime, string dRetTime, string custObj) {
-
+void Map::findItinerary() {
+    
     if (custObj == "any") {
+        cout << "Any Itinerary: " << endl;
+        cout << "===================="<< endl;
+        cout << departCity << " to " << destCity << endl; 
+
+        depthFirstSearch(find(departCity));
+
+        vector<Flight*> itinerary1;
+
+        int c1 = find(destCity);  
+        while (cities[c1].pred != nullptr) {
+            itinerary1.push_back(cities[c1].pred);
+            totalCost += cities[c1].pred->cost;
+            c1 = cities[c1].pred->departureCityID;
+        }
+
+        if (!itinerary1.empty()) {
+            while (!itinerary1.empty()) {
+                cout << *itinerary1.back() << endl;
+                itinerary1.pop_back();
+            }
+        } else {
+            cout << "No valid itinerary exists." << endl;
+        }
+
+        cout << "Total Cost: $" << totalCost << endl;
+        cout << "===================="<< endl;
+
+        totalCost = 0;
+        cout << destCity << " to " << departCity << endl; 
+
+        depthFirstSearch(find(destCity));
+
+        vector<Flight*> itinerary2;
+
+        int c2 = find(departCity);  
+        while (cities[c2].pred != nullptr) {
+            itinerary2.push_back(cities[c2].pred);
+            totalCost += cities[c2].pred->cost;
+            c2 = cities[c2].pred->departureCityID;
+        }
+
+        if (!itinerary2.empty()) {
+            while (!itinerary2.empty()) {
+                cout << *itinerary2.back() << endl;
+                itinerary2.pop_back();
+            }
+        } else {
+            cout << "No valid itinerary exists." << endl;
+        }
+
+        cout << "Total Cost: $" << totalCost << endl;
+        cout << "===================="<< endl;
 
     } else if (custObj == "earliest") {
-        
-    } else if (custObj == "cheapest") {
-        
-    }
+        cout << "Earliest Itinerary: " << endl;
+        cout << "===================="<< endl;
+        cout << departCity << " to " << destCity << endl; 
 
-    cout << "Itinerary: " << endl;
+        dijkstrasAlgorithm(find(departCity), earliestDepartTime);
+
+        vector<Flight*> itinerary1;
+
+        int c1 = find(destCity);  
+        while (cities[c1].pred != nullptr) {
+            itinerary1.push_back(cities[c1].pred);
+            totalCost += cities[c1].pred->cost;
+            c1 = cities[c1].pred->departureCityID;
+        }
+
+        if (!itinerary1.empty()) {
+            while (!itinerary1.empty()) {
+                cout << *itinerary1.back() << endl;
+                itinerary1.pop_back();
+            }
+        } else {
+            cout << "No valid itinerary exists." << endl;
+        }
+
+        cout << "Total Cost: $" << totalCost << endl;
+        cout << "===================="<< endl;
+
+        totalCost = 0;
+        cout << destCity << " to " << departCity << endl; 
+
+        dijkstrasAlgorithm(find(destCity), earliestReturnDepartTime);
+
+        vector<Flight*> itinerary2;
+
+        int c2 = find(departCity);  
+        while (cities[c2].pred != nullptr) {
+            itinerary2.push_back(cities[c2].pred);
+            totalCost += cities[c2].pred->cost;
+            c2 = cities[c2].pred->departureCityID;
+        }
+
+        if (!itinerary2.empty()) {
+            while (!itinerary2.empty()) {
+                cout << *itinerary2.back() << endl;
+                itinerary2.pop_back();
+            }
+        } else {
+            cout << "No valid itinerary exists." << endl;
+        }
+
+        cout << "Total Cost: $" << totalCost << endl;
+        cout << "===================="<< endl;
+    } else if (custObj == "cheapest") { 
+        cout << "Cheapest Itinerary: " << endl;
+        cout << "===================="<< endl;
+        cout << "Not implemented." << endl;
+    }
 }

@@ -8,26 +8,28 @@ using namespace std;
 
 int main() {
 
-    // string custDepartureCity;
-    // string custDestinationCity;
-    // string custDepartureTime;
-    // string custReturnDepartureTime;
-    // string custObjective;
+    string custDepartureCity;
+    string custDestinationCity;
+    string custDepartureTime;
+    string custReturnDepartureTime;
+    string custObjective;
 
-    // cout << "Departure City: ";
-    // cin >> custDepartureCity;  
-    // cout << "Destination City: ";
-    // cin >> custDestinationCity;  
-    // cout << "Departure Time: ";
-    // cin >> custDepartureTime; 
-    // cout << "Return Departure Time: ";
-    // cin >> custReturnDepartureTime;  
-    // cout << "Customer Objective: ";
-    // cin >> custObjective;  
+    cout << "Departure City: ";
+    cin >> custDepartureCity;  
+    cout << "Destination City: ";
+    cin >> custDestinationCity;  
+    cout << "Departure Time: ";
+    cin >> custDepartureTime; 
+    cout << "Return Departure Time: ";
+    cin >> custReturnDepartureTime;  
+    cout << "Customer Objective [\"any\", \"earliest\", \"cheapest\"]: ";
+    cin >> custObjective;  
 
-    Map map;
+    Map map(custDepartureCity, custDestinationCity, custDepartureTime, custReturnDepartureTime, custObjective);
 
     ifstream ddfsfile("DailyDirectFlightSchedule.txt");
+
+    int i = 0;
 
     if (ddfsfile.good()) {
         string departureCity;
@@ -36,8 +38,6 @@ int main() {
         string arrivalTime;
         string c;
         float cost;
-
-        int i = 0;
 
         while (getline(ddfsfile, departureCity, ' ')) {
             getline(ddfsfile, destinationCity, ' ');
@@ -60,13 +60,8 @@ int main() {
 
             map.insertEdge(map.find(departureCity), map.find(destinationCity), departureCity, destinationCity, departureTime, arrivalTime, cost);
         }
-
         ddfsfile.close();
     }
 
-    // map.breadthFirstSearch(0);
-    // map.depthFirstSearch();
-
-    map.dijkstrasAlgorithm();
-    map.printGraph();
+    map.findItinerary();
 }

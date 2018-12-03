@@ -13,6 +13,5 @@ class Flight {
         float cost;
 
         Flight(int departID, int destID, string departCity, string destCity, string dTime, string aTime, float c);
-        float convertTime(string t);
         friend ostream& operator<<(ostream &out, Flight other);
 };
