@@ -7,7 +7,6 @@ using namespace std;
 #include "Map.h"
 
 int main() {
-
     string custDepartureCity;
     string custDestinationCity;
     string custDepartureTime;

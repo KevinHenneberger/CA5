@@ -16,19 +16,15 @@ class Map {
         int find(string cityName);
         float convertTime(string t);
         bool isConflict(const string &t1, const string &t2);
-
         void depthFirstSearch(int cityID);
         void dfsVisit(int cityID);
-
         void dijkstrasAlgorithm(int srcCityID, string earlstDepTme);
-
         void findItinerary();
 
     private:
         vector<City> cities;
         int t;
         float totalCost; 
-
         string departCity;
         string destCity;
         string earliestDepartTime;

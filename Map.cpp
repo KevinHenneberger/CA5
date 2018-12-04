@@ -112,7 +112,6 @@ void Map::dfsVisit(int cityID) {
 }
 
 void Map::dijkstrasAlgorithm(int srcCityID, string earlstDepTme) {
-
     // init single source
     for (int c = 0; c < cities.size(); c++) {
         cities[c].dist = 999999;
@@ -154,10 +153,9 @@ void Map::dijkstrasAlgorithm(int srcCityID, string earlstDepTme) {
             }
         }
     }
-}   
+}    
 
 void Map::findItinerary() {
-    
     if (custObj == "any") {
         cout << "Any Itinerary: " << endl;
         cout << "===================="<< endl;
@@ -268,6 +266,5 @@ void Map::findItinerary() {
     } else if (custObj == "cheapest") { 
         cout << "Cheapest Itinerary: " << endl;
         cout << "===================="<< endl;
-        cout << "Not implemented." << endl;
     }
 }
